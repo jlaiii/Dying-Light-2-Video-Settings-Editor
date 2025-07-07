@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dying Light 2 Video Settings Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        body.dark-mode {
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: auto;
+            position: relative; /* Added for toggle positioning */
+        }
+        .container.dark-mode {
+            background-color: #3a3a3a;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        h1.dark-mode {
+            color: #f0f0f0;
+        }
+        .setting-item label.dark-mode {
+            color: #c0c0c0;
+        }
+        .setting-item input[type="number"].dark-mode,
+        .setting-item input[type="text"].dark-mode,
+        .setting-item select.dark-mode {
+            background-color: #4a4a4a;
+            border: 1px solid #555;
+            color: #e0e0e0;
+        }
+        .setting-item input[type="range"].dark-mode {
+            background: #555;
+        }
+        .setting-item input[type="range"].dark-mode::-webkit-slider-thumb {
+            background: #009BFF;
+        }
+        .setting-item input[type="range"].dark-mode::-moz-range-thumb {
+            background: #009BFF;
+        }
+        button.dark-mode {
+            background-color: #009BFF;
+        }
+        button.dark-mode:hover {
+            background-color: #007BCC;
+        }
+        .file-path.dark-mode {
+            color: #a0a0a0;
+        }
+        .drop-area.dark-mode {
+            border: 2px dashed #666;
+            background-color: #444;
+            color: #bbb;
+        }
+        .drop-area.dark-mode.highlight {
+            border-color: #009BFF;
+            background-color: #333;
+        }
+        .drop-area.dark-mode.success {
+            border-color: #4CAF50;
+            background-color: #388E3C;
+            color: #fff;
+        }
+        .feedback-message.dark-mode {
+            color: #009BFF;
+        }
+        .feedback-message.dark-mode.success {
+            color: #4CAF50;
+        }
+        .feedback-message.dark-mode.error {
+            color: #FF6347;
+        }
+        .search-bar-container.dark-mode {
+            background-color: #4a4a4a;
+            border: 1px solid #555;
+        }
+        .search-bar-container input[type="text"].dark-mode {
+            background-color: #5a5a5a;
+            border: 1px solid #666;
+            color: #e0e0e0;
+        }
+        .search-bar-container input[type="text"].dark-mode::placeholder {
+            color: #999;
+        }
+        .search-bar-container input[type="text"].dark-mode:focus {
+            border-color: #009BFF;
+            box-shadow: 0 0 0 0.2rem rgba(0, 155, 255, 0.25);
+        }
+        .default-config-bar.dark-mode {
+            background-color: #388E3C;
+            color: #fff;
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            z-index: 10;
+        }
+        .theme-toggle:hover {
+            background-color: #0056b3;
+        }
+        .theme-toggle.dark-mode {
+            background-color: #009BFF;
+        }
+        .theme-toggle.dark-mode:hover {
+            background-color: #007BCC;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .setting-section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .setting-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 8px 0;
+            position: relative; /* Needed for tooltip positioning */
+        }
+        .setting-item label {
+            flex: 1;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .setting-item[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 0; /* Position relative to the label's left edge */
+            top: 100%; /* Position below the label */
+            transform: translateY(0); /* No vertical translation needed */
+            white-space: normal;
+            max-width: 250px; /* Adjust as needed */
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            z-index: 1;
+            margin-top: 5px; /* Space between label and tooltip */
+            font-weight: normal;
+            font-size: 0.8em;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none; /* Allow clicks through the tooltip */
+        }
+        .setting-item[data-tooltip]:hover::after {
+            opacity: 1;
+        }
+        
+        .setting-item input[type="number"],
+        .setting-item input[type="text"],
+        .setting-item select {
+            flex: 2;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .setting-item input[type="range"] {
+            flex: 2;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        .setting-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007BFF;
+            cursor: pointer;
+        }
+        .setting-item input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007BFF;
+            cursor: pointer;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .file-path {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            color: #555;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .drop-area.highlight {
+            border-color: #007BFF;
+            background-color: #e6f7ff;
+        }
+        .drop-area.success {
+            border-color: #28a745;
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .feedback-message {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #007BFF;
+        }
+        .feedback-message.success {
+            color: #28a745;
+        }
+        .feedback-message.error {
+            color: #dc3545;
+        }
+        .search-bar-container {
+            width: 100%;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6; /* Added border for better visual separation */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-bar-container input[type="text"] {
+            width: 80%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+        .search-bar-container input[type="text"]::placeholder {
+            color: #6c757d;
+            opacity: 0.8;
+        }
+        .search-bar-container input[type="text"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        .default-config-bar {
+            width: 100%;
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <button id="themeToggle" class="theme-toggle">Toggle Theme</button>
+        <h1>Dying Light 2 Video Settings Editor</h1>
+
+        <div class="drop-area" id="dropArea">
+            Drag and drop your `video.scr` file here, or click to select.
+            <input type="file" id="fileInput" accept=".scr" style="display: none;">
+        </div>
+        <div class="feedback-message" id="feedbackMessage"></div>
+
+        <div class="default-config-bar" id="defaultConfigLoadedBar" style="display: none;">
+            Default configuration loaded.
+        </div>
+
+        <div class="search-bar-container">
+            <input type="text" id="settingSearch" placeholder="Search settings...">
+        </div>
+
+        <div class="setting-section">
+            <h2>Display Settings</h2>
+            <div class="setting-item" data-tooltip="Sets the display mode for the game window: Windowed, Borderless, or Fullscreen.">
+                <label for="windowMode">Window Mode</label>
+                <select id="windowMode">
+                    <option value="0">Windowed</option>
+                    <option value="1">Borderless</option>
+                    <option value="2">Fullscreen</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Sets the window's horizontal position in pixels. Only applies in Windowed or Borderless modes.">
+                <label for="windowOffsetX">Window Offset X</label>
+                <input type="number" id="windowOffsetX" value="0">
+            </div>
+            <div class="setting-item" data-tooltip="Sets the window's vertical position in pixels. Only applies in Windowed or Borderless modes.">
+                <label for="windowOffsetY">Window Offset Y</label>
+                <input type="number" id="windowOffsetY" value="0">
+            </div>
+            <div class="setting-item" data-tooltip="Sets the primary display resolution for the game.">
+                <label for="resolution">Resolution (Primary Monitor)</label>
+                <select id="resolution">
+                    <option value="1280,720">1280x720 (720p)</option>
+                    <option value="1920,1080">1920x1080 (1080p)</option>
+                    <option value="2560,1440">2560x1440 (1440p)</option>
+                    <option value="3840,2160">3840x2160 (4K)</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="text" id="customResolution" placeholder="e.g., 1920,1080" style="display: none; margin-left: 10px;">
+            </div>
+            <div class="setting-item" data-tooltip="Sets the secondary display resolution. Typically used for multi-monitor setups. Format: width,height (e.g., 0,0 if not used).">
+                <label for="resolutionSecondary">Resolution (Secondary Monitor)</label>
+                <input type="text" id="resolutionSecondary" value="0,0">
+            </div>
+            <div class="setting-item" data-tooltip="Specifies the index of the primary monitor to use. 0 is usually the main display.">
+                <label for="monitor">Primary Monitor Index</label>
+                <input type="number" id="monitor" value="0" min="0">
+            </div>
+            <div class="setting-item" data-tooltip="Specifies the index of the secondary monitor to use. 0 if not used.">
+                <label for="monitorSecondary">Secondary Monitor Index</label>
+                <input type="number" id="monitorSecondary" value="0" min="0">
+            </div>
+            <div class="setting-item" data-tooltip="Selects the rendering API: d3d11 (DirectX 11) or d3d12 (DirectX 12). d3d12 generally offers better performance on modern hardware.">
+                <label for="rendererMode">Renderer Mode</label>
+                <select id="rendererMode">
+                    <option value="d3d11">d3d11</option>
+                    <option value="d3d12">d3d12</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Controls the game's frame rate and VSync behavior. 'No VSync' allows unlimited frames, 'Max device refresh rate' syncs with your monitor, and specific Hz options cap the frame rate.">
+                <label for="frameRate">Frame Rate / VSync</label>
+                <select id="frameRate">
+                    <option value="0">No VSync</option>
+                    <option value="1">Max device refresh rate</option>
+                    <option value="30">30Hz</option>
+                    <option value="60">60Hz</option>
+                    <option value="75">75Hz</option>
+                    <option value="120">120Hz</option>
+                    <option value="144">144Hz</option>
+                    <option value="165">165Hz</option>
+                    <option value="240">240Hz</option>
+                    <option value="360">360Hz</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="number" id="customFrameRate" placeholder="e.g., 144" style="display: none; margin-left: 10px;">
+            </div>
+             <div class="setting-item" data-tooltip="Disables Desktop Window Manager for fullscreen mode, potentially improving performance but can cause issues.">
+                <label for="disableDWM">Disable DWM (Fullscreen)</label>
+                <input type="number" id="disableDWM" value="0" min="0" max="1">
+            </div>
+            <div class="setting-item" data-tooltip="Enables Variable Refresh Rate (VRR) if your monitor and GPU support it, for smoother gameplay.">
+                <label for="vrr">Variable Refresh Rate (VRR)</label>
+                <input type="checkbox" id="vrr">
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2>Upscaling & Rendering</h2>
+            <div class="setting-item" data-tooltip="Adjusts the internal rendering resolution of 3D elements. Lower values improve performance at the cost of visual clarity.">
+                <label for="scale3D">3D Resolution Scale</label>
+                <input type="number" id="scale3D" value="1.000000" step="0.01" min="0.1" max="2.0">
+            </div>
+            <div class="setting-item" data-tooltip="Selects the upscaling technology used to render the game at a lower resolution and then upscale it to your display resolution, improving performance. Options include DLSS (NVIDIA), FSR (AMD), and XeSS (Intel).">
+                <label for="upscaler">Upscaler</label>
+                <select id="upscaler">
+                    <option value="0">None</option>
+                    <option value="1">Linear</option>
+                    <option value="2">DLSS</option>
+                    <option value="3">FSR</option>
+                    <option value="4">FSR2</option>
+                    <option value="5">XeSS</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Determines the quality level for the selected upscaling technology. Higher quality settings result in a sharper image but may reduce performance.">
+                <label for="upscaling">Upscaling Quality</label>
+                <select id="upscaling">
+                    <option value="0">Best Performance</option>
+                    <option value="1">Balanced</option>
+                    <option value="2">Best Quality</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the sharpness of the image when using FSR upscaling. Higher values can make the image appear crisper.">
+                <label for="fsrSharpness">FSR Sharpness</label>
+                <input type="number" id="fsrSharpness" value="1.000000" step="0.01" min="0.0" max="2.0">
+            </div>
+            <div class="setting-item" data-tooltip="Enables frame generation technologies like DLSS Frame Generation to increase frame rates.">
+                <label for="frameAmplification">Frame Amplification</label>
+                <select id="frameAmplification">
+                    <option value="0">Off</option>
+                    <option value="1">DLSS</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Allows the GPU to process graphics and compute tasks simultaneously, potentially improving performance.">
+                <label for="asyncCompute">Async Compute</label>
+                <select id="asyncCompute">
+                    <option value="0">Deny</option>
+                    <option value="1">Allow (if supported)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2>Quality Settings</h2>
+            <div class="setting-item" data-tooltip="Sets the resolution and detail of in-game textures. Higher quality requires more VRAM.">
+                <label for="textureQuality">Texture Quality</label>
+                <select id="textureQuality">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Determines the quality of shadows cast by objects. Higher settings result in more realistic and detailed shadows.">
+                <label for="shadowsQuality">Shadows Quality</label>
+                <select id="shadowsQuality">
+                    <option value="0">PCF</option>
+                    <option value="1">PCSS Low</option>
+                    <option value="2">PCSS Medium</option>
+                    <option value="3">PCSS High</option>
+                    <option value="4">Raytraced</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Sets a preset for shadow quality. (Note: This might override individual shadow settings)">
+                <label for="shadowsPreset">Shadows Preset</label>
+                <input type="number" id="shadowsPreset" value="0" min="0">
+            </div>
+            <div class="setting-item" data-tooltip="Sets the resolution of shadow maps, affecting the sharpness and detail of shadows. Higher values improve shadow quality.">
+                <label for="shadowMapSize">Shadow Map Size</label>
+                <input type="number" id="shadowMapSize" value="2048" min="256" step="256">
+            </div>
+            <div class="setting-item" data-tooltip="Sets the resolution of shadow maps for spot lights, affecting their detail.">
+                <label for="spotShadowMapSize">Spot Shadow Map Size</label>
+                <input type="number" id="spotShadowMapSize" value="4096" min="256" step="256">
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the quality of shadows cast by spot lights.">
+                <label for="spotShadowsQuality">Spot Shadows Quality</label>
+                <select id="spotShadowsQuality">
+                    <option value="0">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Controls the density and detail of grass and foliage.">
+                <label for="grassQuality">Grass Quality</label>
+                <input type="number" id="grassQuality" value="0" min="0">
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the quality and density of volumetric fog effects.">
+                <label for="fogQuality">Fog Quality</label>
+                <select id="fogQuality">
+                    <option value="0">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Controls the quality of reflections on surfaces. Higher settings provide more accurate and detailed reflections.">
+                <label for="reflectionsQuality">Reflections Quality</label>
+                <select id="reflectionsQuality">
+                    <option value="0">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                </select>
+            </div>
+             <div class="setting-item" data-tooltip="Enables or disables Ambient Occlusion, which adds realistic shadows where objects meet or block light.">
+                <label for="ambientOcclusion">Ambient Occlusion</label>
+                <select id="ambientOcclusion">
+                    <option value="0">Disabled</option>
+                    <option value="1">Enabled</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the quality of Ambient Occlusion effects.">
+                <label for="ambientOcclusionQuality">Ambient Occlusion Quality</label>
+                <select id="ambientOcclusionQuality">
+                    <option value="0">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Controls the quality of small, subtle shadows that appear where objects are in direct contact.">
+                <label for="contactShadowsQuality">Contact Shadows Quality</label>
+                <select id="contactShadowsQuality">
+                    <option value="0">None</option>
+                    <option value="1">Low</option>
+                    <option value="2">Medium</option>
+                    <option value="3">High</option>
+                    <option value="4">Very High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the quality of GPU-accelerated visual effects, such as particles and explosions.">
+                <label for="gpuFxQuality">GPU FX Quality</label>
+                <select id="gpuFxQuality">
+                    <option value="0">Medium</option>
+                    <option value="1">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables spot lights casting shadows.">
+                <label for="optSpotsCastShadows">Spot Lights Cast Shadows</label>
+                <input type="checkbox" id="optSpotsCastShadows">
+            </div>
+            <div class="setting-item" data-tooltip="Controls the level of detail (LOD) for distant objects. Higher quality means more detailed models further away.">
+                <label for="lodQuality">LOD Quality</label>
+                <select id="lodQuality">
+                    <option value="0">Low</option>
+                    <option value="1">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the distance at which different levels of detail are rendered. Higher values mean higher detail at greater distances.">
+                <label for="lodMultiplier">LOD Multiplier</label>
+                <input type="number" id="lodMultiplier" value="100" min="1" step="10">
+            </div>
+            <div class="setting-item" data-tooltip="Disables optional anisotropic filtering in some materials, potentially improving performance at the cost of some texture clarity.">
+                <label for="anisoOptOut">Disable Optional Anisotropic Filtering</label>
+                <input type="checkbox" id="anisoOptOut">
+            </div>
+            <div class="setting-item" data-tooltip="Sets the level of Anisotropic Filtering, which improves the clarity of textures viewed at an angle.">
+                <label for="anisoOptMaxAnisotropy">Max Anisotropic Filtering</label>
+                <select id="anisoOptMaxAnisotropy">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="8">8</option>
+                    <option value="16">16</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2>Ray Tracing Settings</h2>
+            <div class="setting-item" data-tooltip="Enables Raytraced Ambient Occlusion, providing more realistic and accurate ambient shadows.">
+                <label for="rt_ao">Raytraced Ambient Occlusion</label>
+                <input type="checkbox" id="rt_ao">
+            </div>
+            <div class="setting-item" data-tooltip="Enables Raytraced Soft Shadows, creating more realistic and softer shadow edges.">
+                <label for="rt_ss">Raytraced Soft Shadows</label>
+                <input type="checkbox" id="rt_ss">
+            </div>
+            <div class="setting-item" data-tooltip="Enables Raytraced Flashlight, making the flashlight's illumination more realistic.">
+                <label for="rt_lit">Raytraced Flashlight</label>
+                <input type="checkbox" id="rt_lit">
+            </div>
+            <div class="setting-item" data-tooltip="Enables Raytraced Global Illumination for diffuse lighting, enhancing the realism of indirect lighting.">
+                <label for="rt_giDif">Raytraced Global Illumination (Diffuse)</label>
+                <input type="checkbox" id="rt_giDif">
+            </div>
+            <div class="setting-item" data-tooltip="Enables Raytraced Global Illumination for specular lighting, improving the realism of reflections and highlights.">
+                <label for="rt_giSpc">Raytraced Global Illumination (Specular)</label>
+                <input type="checkbox" id="rt_giSpc">
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the quality of Voxel Global Illumination, affecting the realism of indirect lighting.">
+                <label for="voxelGiQuality">Voxel GI Quality</label>
+                <select id="voxelGiQuality">
+                    <option value="0">Off</option>
+                    <option value="1">Low</option>
+                    <option value="2">Medium</option>
+                    <option value="3">High</option>
+                    <option value="4">Ultra</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2>Post-Processing & Visual Effects</h2>
+            <div class="setting-item" data-tooltip="Adjusts the overall brightness of the game's image.">
+                <label for="gammaFloat">Gamma</label>
+                <input type="number" id="gammaFloat" value="1.00" step="0.01" min="0.1" max="2.0">
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables the motion blur effect, which simulates blur during fast camera movements.">
+                <label for="motionBlur">Motion Blur</label>
+                <select id="motionBlur">
+                    <option value="0">Disabled</option>
+                    <option value="1">Enabled</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Sets the quality of the motion blur effect.">
+                <label for="motionBlurQuality">Motion Blur Quality</label>
+                <select id="motionBlurQuality">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the strength of the motion blur effect.">
+                <label for="motionBlurIntensity">Motion Blur Intensity</label>
+                <input type="range" id="motionBlurIntensity" value="0.50" min="0.0" max="1.0" step="0.01">
+                <span id="motionBlurIntensityValue">0.50</span>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables the bokeh depth of field effect, which blurs out-of-focus areas.">
+                <label for="bokeh">Bokeh</label>
+                <select id="bokeh">
+                    <option value="0">Off</option>
+                    <option value="1">On</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables glow and glare effects from bright light sources.">
+                <label for="glowGlare">Glow Glare</label>
+                <select id="glowGlare">
+                    <option value="0">Off</option>
+                    <option value="1">On</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables light streaks emanating from bright light sources.">
+                <label for="glowStreaks">Glow Streaks</label>
+                <select id="glowStreaks">
+                    <option value="0">Off</option>
+                    <option value="1">On</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables lens flare effects when looking at bright light sources.">
+                <label for="lensFlare">Lens Flare</label>
+                <select id="lensFlare">
+                    <option value="0">Off</option>
+                    <option value="1">On</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the quality of Subsurface Scattering, which simulates light passing through translucent objects like skin.">
+                <label for="ssssQuality">SSSS Quality</label>
+                <select id="ssssQuality">
+                    <option value="0">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables chromatic aberration, a visual effect that simulates lens distortion.">
+                <label for="chromaticAberration">Chromatic Aberration</label>
+                <select id="chromaticAberration">
+                    <option value="0">Disabled</option>
+                    <option value="1">Enabled</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables a film grain effect, adding a cinematic look.">
+                <label for="filmGrain">Film Grain</label>
+                <select id="filmGrain">
+                    <option value="0">Disabled</option>
+                    <option value="1">Enabled</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the overall color palette and tone of the game's visuals.">
+                <label for="colorGrading">Color Grading</label>
+                <select id="colorGrading">
+                    <option value="0">Normal</option>
+                    <option value="1">E3</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Enables or disables anti-aliasing, which smooths jagged edges on objects.">
+                <label for="antiAliasing">Anti Aliasing</label>
+                <select id="antiAliasing">
+                    <option value="0">Disabled</option>
+                    <option value="1">Enabled</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Selects the anti-aliasing method. 'Sharp' might offer more clarity, while 'Stable' focuses on reducing temporal aliasing.">
+                <label for="antiAliasingMode">Anti Aliasing Mode</label>
+                <select id="antiAliasingMode">
+                    <option value="0">Sharp</option>
+                    <option value="1">Stable</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="Adjusts the color palette for different types of color blindness (Protanopia, Deuteranopia, Tritanopia).">
+                <label for="colorBlindMode">Color Blind Mode</label>
+                <select id="colorBlindMode">
+                    <option value="0">None</option>
+                    <option value="1">Protanopia</option>
+                    <option value="2">Deuteranopia</option>
+                    <option value="3">Tritanopia</option>
+                </select>
+            </div>
+            <div class="setting-item" data-tooltip="This setting adds to your in-game Field of View (FOV). For example, if your in-game FOV is 80 and this is set to 10, your effective FOV will be 90. This allows for a wider perspective of the game world.">
+                <label for="extraGameFov">Extra Game FOV</label>
+                <input type="number" id="extraGameFov" value="0.00" step="0.1" min="0.0" max="60.0" style="flex: 1;">
+                <input type="range" id="extraGameFovSlider" value="0.00" min="0.0" max="60.0" step="0.1" style="flex: 1; margin-left: 10px;">
+                <span id="extraGameFovValue" style="width: 40px; text-align: right;">0.00</span>
+                
+            </div>
+            <div class="setting-item" data-tooltip="Enables NVIDIA Reflex Low Latency mode, which reduces system latency for improved responsiveness.">
+                <label for="reflex">Reflex</label>
+                <select id="reflex">
+                    <option value="0">Off</option>
+                    <option value="1">On</option>
+                    <option value="2">On + Boost</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button onclick="saveSettings()">Download Config File</button>
+        </div>
+
+        <div class="file-path">
+            <p>Settings file location: C:\Users\*\Documents\dying light 2\out\settings\video.scr</p>
+            <p>After downloading, you must manually move the `video.scr` file to the location above.</p>
+        </div>
+    </div>
+
+    <script>
+        // Define a comprehensive default configuration for Dying Light 2 settings.
+        // These values represent common or balanced settings that a user might start with.
+        const DEFAULT_SETTINGS = `RendererMode("d3d11")
+AsyncCompute(1)
+WindowMode(1)
+Resolution(1920,1080)
+Scale3D(1.000000)
+FSR(1.000000)
+Upscaler(0)
+Upscaling(0)
+Monitor(0)
+ExtraGameFov(0.00)
+DisableDWM(0)
+TextureQuality("High")
+ShadowsQuality(2)
+ShadowMapSize(2048)
+SpotShadowMapSize(4096)
+GammaFloat(1.00)
+GrassQuality(1)
+FrameRate(1)
+Reflex(0)
+MotionBlur(1)
+MotionBlurIntensity(0.50)
+Bokeh(1)
+GlowGlare(1)
+GlowStreaks(1)
+LensFlare(1)
+SSSSQuality(1)
+MotionBlurQuality("Medium")
+ChromaticAberration(0)
+FilmGrain(0)
+ColorGrading(0)
+AntiAliasing(1)
+AntiAliasingMode(0)
+FogQuality(1)
+ReflectionsQuality(1)
+ContactShadowsQuality(2)
+SpotShadowsQuality(1)
+AmbientOcclusion(1)
+AmbientOcclusionQuality(1)
+ColorBlindMode(0)
+GpuFxQuality(0)
+VoxelGiQuality(2)
+LodQuality(1)
+LodMultiplier(100)
+AnisoOptMaxAnisotropy(8)
+FrameAmplification(0)
+Version(2000)`;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get references to DOM elements
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const motionBlurIntensity = document.getElementById('motionBlurIntensity');
+            const motionBlurIntensityValue = document.getElementById('motionBlurIntensityValue');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const defaultConfigLoadedBar = document.getElementById('defaultConfigLoadedBar');
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            const container = document.querySelector('.container');
+
+            // Set initial theme based on localStorage or default to dark mode
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme === 'light-mode') {
+                body.classList.remove('dark-mode');
+                container.classList.remove('dark-mode');
+                applyThemeToElements('light-mode');
+                themeToggle.textContent = 'Toggle Dark';
+            } else { // Default to dark mode
+                body.classList.add('dark-mode');
+                container.classList.add('dark-mode');
+                applyThemeToElements('dark-mode');
+                themeToggle.textContent = 'Toggle Light';
+            }
+
+            // Toggle theme on button click
+            themeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark-mode')) {
+                    body.classList.remove('dark-mode');
+                    container.classList.remove('dark-mode');
+                    applyThemeToElements('light-mode');
+                    localStorage.setItem('theme', 'light-mode');
+                    themeToggle.textContent = 'Toggle Dark';
+                } else {
+                    body.classList.add('dark-mode');
+                    container.classList.add('dark-mode');
+                    applyThemeToElements('dark-mode');
+                    localStorage.setItem('theme', 'dark-mode');
+                    themeToggle.textContent = 'Toggle Light';
+                }
+            });
+
+            function applyThemeToElements(theme) {
+                const isDarkMode = theme === 'dark-mode';
+                document.querySelectorAll('h1, .setting-item label, .setting-item input, .setting-item select, button, .file-path, .drop-area, .feedback-message, .search-bar-container, .default-config-bar, .theme-toggle, .modal, .modal-content').forEach(element => {
+                    if (element.tagName === 'INPUT' && (element.type === 'checkbox' || element.type === 'range')) {
+                        // Special handling for range and checkbox inputs as they don't have direct text color
+                        if (isDarkMode) {
+                            element.classList.add('dark-mode');
+                        } else {
+                            element.classList.remove('dark-mode');
+                        }
+                    } else if (element.tagName === 'INPUT' && element.type === 'text' && element.closest('.search-bar-container')) {
+                        // Special handling for search bar input
+                        if (isDarkMode) {
+                            element.classList.add('dark-mode');
+                        } else {
+                            element.classList.remove('dark-mode');
+                        }
+                    } else {
+                        if (isDarkMode) {
+                            element.classList.add('dark-mode');
+                        } else {
+                            element.classList.remove('dark-mode');
+                        }
+                    }
+                });
+            }
+
+            // Load default settings when the page is first loaded
+            loadSettingsFromString(DEFAULT_SETTINGS);
+            if (defaultConfigLoadedBar) {
+                defaultConfigLoadedBar.style.display = 'block';
+                if (body.classList.contains('dark-mode')) {
+                    defaultConfigLoadedBar.classList.add('dark-mode');
+                } else {
+                    defaultConfigLoadedBar.classList.remove('dark-mode');
+                }
+            }
+
+
+            // Event listener for clicking on the drop area to open file dialog
+            dropArea.addEventListener('click', () => fileInput.click());
+
+            // Event listener for when a file is selected via the input dialog
+            fileInput.addEventListener('change', (event) => {
+                const files = event.target.files;
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+            });
+
+            // Prevent default drag behaviors for drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+                // Also prevent default for the entire document to avoid opening the file in the browser
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Add visual highlighting when a file is dragged over the drop area
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+
+            // Remove visual highlighting when a file leaves or is dropped on the drop area
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            // Handle the actual drop event
+            dropArea.addEventListener('drop', handleDrop, false);
+
+            // Function to prevent default event behaviors (like opening a dropped file)
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Function to add a CSS class for visual highlighting
+            function highlight() {
+                dropArea.classList.add('highlight');
+                if (document.body.classList.contains('dark-mode')) {
+                    dropArea.classList.add('dark-mode');
+                }
+            }
+
+            // Function to remove CSS classes for visual highlighting and success state
+            function unhighlight() {
+                dropArea.classList.remove('highlight', 'success');
+                dropArea.classList.remove('dark-mode'); // Remove dark mode class on unhighlight
+            }
+
+            // Function to handle the dropped files
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            // Function to process the selected/dropped files
+            function handleFiles(files) {
+                // Clear any previous feedback messages
+                updateFeedback('', 'info');
+
+                if (files.length === 0) {
+                    updateFeedback('No file selected.', 'error');
+                    return;
+                }
+
+                const file = files[0];
+                if (file.name !== 'video.scr') {
+                    updateFeedback('Please select/drop a file named "video.scr".', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        loadSettingsFromString(content);
+                        // updateFeedback('Your configuration file has been loaded successfully!', 'success'); // REMOVED to prevent duplicate message
+                        dropArea.classList.add('success');
+                        if (document.body.classList.contains('dark-mode')) {
+                            dropArea.classList.add('dark-mode');
+                        }
+
+                        // Handle the config loaded message bar
+                        if (defaultConfigLoadedBar) {
+                            defaultConfigLoadedBar.textContent = 'Your configuration has been loaded!';
+                            defaultConfigLoadedBar.style.display = 'block';
+                        }
+
+                    } catch (error) {
+                        updateFeedback('Error loading file: ' + error.message, 'error');
+                        console.error('Error loading config file:', error);
+                    }
+                };
+                reader.onerror = function() {
+                    updateFeedback('Failed to read the file.', 'error');
+                };
+                reader.readAsText(file);
+            }
+
+            // Function to load settings from a given string content into the form
+            function loadSettingsFromString(settingsContent) {
+                const lines = settingsContent.split('\n').filter(line => line.trim() !== '');
+
+                // First, reset all checkboxes to unchecked, as their presence in the file means "on"
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                lines.forEach(line => {
+                    const match = line.match(/!*([a-zA-Z0-9_]+)\((.*)\)/); // Adjusted regex to include '!'
+                    if (match) {
+                        let key = match[1];
+                        let value = match[2];
+
+                        // Remove quotes from string values
+                        if (value.startsWith('"') && value.endsWith('"')) {
+                            value = value.substring(1, value.length - 1);
+                        }
+
+                        let elementId;
+
+                        // Specific mappings for problematic keys
+                        if (key === "FSR") {
+                            elementId = "fsrSharpness";
+                        } else if (key === "SSSSQuality") {
+                            elementId = "ssssQuality";
+                        } else if (key === "Version") {
+                            // Skip Version as it's a static value and has no input element
+                            return;
+                        } else if (key === "Resolution") {
+                            elementId = "resolution";
+                            const resolutionElement = document.getElementById(elementId);
+                            const customResolutionElement = document.getElementById('customResolution');
+                            if (resolutionElement && customResolutionElement) {
+                                if (['1280,720', '1920,1080', '2560,1440', '3840,2160'].includes(value)) {
+                                    resolutionElement.value = value;
+                                    customResolutionElement.style.display = 'none';
+                                } else {
+                                    resolutionElement.value = 'custom';
+                                    customResolutionElement.value = value;
+                                    customResolutionElement.style.display = 'inline-block';
+                                }
+                            }
+                            return; // Handled, move to next line
+                        } else if (key === "ResolutionSecondary") {
+                            elementId = key.charAt(0).toLowerCase() + key.slice(1);
+                        } else if (key === "WindowOffset") {
+                            const [offsetX, offsetY] = value.split(',').map(Number);
+                            document.getElementById('windowOffsetX').value = offsetX;
+                            document.getElementById('windowOffsetY').value = offsetY;
+                            return; // Handled, move to next line
+                        } else if (key === "FrameRate") {
+                            elementId = "frameRate";
+                            const frameRateElement = document.getElementById(elementId);
+                            const customFrameRateElement = document.getElementById('customFrameRate');
+                            if (frameRateElement && customFrameRateElement) {
+                                if (['0', '1', '30', '60', '75', '120', '144', '165', '240', '360'].includes(value)) {
+                                    frameRateElement.value = value;
+                                    customFrameRateElement.style.display = 'none';
+                                } else {
+                                    frameRateElement.value = 'custom';
+                                    customFrameRateElement.value = value;
+                                    customFrameRateElement.style.display = 'inline-block';
+                                }
+                            }
+                            return; // Handled, move to next line
+                        } else if (key === "ShadowsPreset") {
+                            elementId = "shadowsPreset";
+                        } else if (key === "AnisoOptOut") {
+                            elementId = "anisoOptOut";
+                            const checkboxElement = document.getElementById(elementId);
+                            if (checkboxElement && checkboxElement.type === 'checkbox') {
+                                checkboxElement.checked = true;
+                            }
+                            return; // Handled, move to next line
+                        } else if (key.startsWith('RT_') || key === 'Vrr') {
+                            // These are flags, their presence means they are "on"
+                            elementId = key.charAt(0).toLowerCase() + key.slice(1);
+                            const checkboxElement = document.getElementById(elementId);
+                            if (checkboxElement && checkboxElement.type === 'checkbox') {
+                                checkboxElement.checked = true;
+                            }
+                            return; // Handled, move to next line
+                        } else {
+                            // Default camelCase conversion
+                            elementId = key.charAt(0).toLowerCase() + key.slice(1);
+                        }
+                        
+                        const element = document.getElementById(elementId);
+
+                        if (element) {
+                            if (element.type === 'checkbox') {
+                                element.checked = (value === '1');
+                            } else if (element.tagName === 'SELECT') {
+                                element.value = value;
+                            } else if (element.type === 'range' || element.type === 'number') {
+                                element.value = parseFloat(value);
+                                if (element.type === 'range') {
+                                    document.getElementById(element.id + 'Value').textContent = parseFloat(value).toFixed(2);
+                                }
+                            } else {
+                                element.value = value;
+                            }
+                            // Apply dark mode class if currently in dark mode
+                            if (document.body.classList.contains('dark-mode')) {
+                                element.classList.add('dark-mode');
+                            }
+                        } else {
+                            console.warn(`Element with ID '${elementId}' not found for key '${key}'`);
+                        }
+                    }
+                });
+            }
+
+            // Function to update the feedback message to the user
+            function updateFeedback(message, type = 'info') {
+                feedbackMessage.textContent = message;
+                feedbackMessage.className = 'feedback-message ' + type; // Set class for styling (success, error, info)
+                if (document.body.classList.contains('dark-mode')) {
+                    feedbackMessage.classList.add('dark-mode');
+                }
+            }
+
+            const extraGameFov = document.getElementById('extraGameFov');
+            const extraGameFovSlider = document.getElementById('extraGameFovSlider');
+            const extraGameFovValue = document.getElementById('extraGameFovValue');
+            const resolutionSelect = document.getElementById('resolution');
+            const customResolutionInput = document.getElementById('customResolution');
+            const frameRateSelect = document.getElementById('frameRate');
+            const customFrameRateInput = document.getElementById('customFrameRate');
+
+            // Update slider and value when number input changes
+            extraGameFov.addEventListener('input', function() {
+                let value = parseFloat(this.value);
+                this.value = value.toFixed(2);
+                extraGameFovSlider.value = value;
+                extraGameFovValue.textContent = value.toFixed(2);
+            });
+
+            // Update number input and value when slider changes
+            extraGameFovSlider.addEventListener('input', function() {
+                let value = parseFloat(this.value);
+                extraGameFov.value = value.toFixed(2);
+                extraGameFovValue.textContent = value.toFixed(2);
+            });
+
+            // Update motionBlurIntensity value when slider changes
+            motionBlurIntensity.addEventListener('input', function() {
+                motionBlurIntensityValue.textContent = parseFloat(this.value).toFixed(2);
+            });
+
+            // Initial display for extraGameFov value
+            extraGameFovValue.textContent = parseFloat(extraGameFov.value).toFixed(2);
+
+            // Handle resolution dropdown and custom input
+            resolutionSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customResolutionInput.style.display = 'inline-block';
+                    customResolutionInput.value = ''; // Clear custom input when 'custom' is selected
+                } else {
+                    customResolutionInput.style.display = 'none';
+                }
+            });
+
+            // Set initial state of custom resolution input based on default value
+            if (resolutionSelect.value === 'custom') {
+                customResolutionInput.style.display = 'inline-block';
+            } else {
+                customResolutionInput.style.display = 'none';
+            }
+
+            // If the initial resolution is not one of the predefined options, set dropdown to custom and display input
+            const initialResolution = resolutionSelect.value;
+            const predefinedResolutions = ['1280,720', '1920,1080', '2560,1440', '3840,2160'];
+            if (!predefinedResolutions.includes(initialResolution) && initialResolution !== 'custom') {
+                resolutionSelect.value = 'custom';
+                customResolutionInput.style.display = 'inline-block';
+                customResolutionInput.value = initialResolution; // Set custom input to the loaded resolution
+            } else if (initialResolution === 'custom') {
+                // If the initial value is 'custom', ensure the input is shown
+                customResolutionInput.style.display = 'inline-block';
+            }
+
+            // Handle frameRate dropdown and custom input
+            frameRateSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customFrameRateInput.style.display = 'inline-block';
+                    customFrameRateInput.value = ''; // Clear custom input when 'custom' is selected
+                } else {
+                    customFrameRateInput.style.display = 'none';
+                }
+            });
+
+            // Set initial state of custom frame rate input based on default value
+            if (frameRateSelect.value === 'custom') {
+                customFrameRateInput.style.display = 'inline-block';
+            } else {
+                customFrameRateInput.style.display = 'none';
+            }
+
+            // If the initial frame rate is not one of the predefined options, set dropdown to custom and display input
+            const initialFrameRate = frameRateSelect.value;
+            const predefinedFrameRates = ['0', '1', '30', '60', '75', '120', '144', '165', '240', '360'];
+            if (!predefinedFrameRates.includes(initialFrameRate) && initialFrameRate !== 'custom') {
+                frameRateSelect.value = 'custom';
+                customFrameRateInput.style.display = 'inline-block';
+                customFrameRateInput.value = initialFrameRate; // Set custom input to the loaded frame rate
+            } else if (initialFrameRate === 'custom') {
+                // If the initial value is 'custom', ensure the input is shown
+                customFrameRateInput.style.display = 'inline-block';
+            }
+
+            
+
+            // Search functionality
+            const settingSearch = document.getElementById('settingSearch');
+            settingSearch.addEventListener('keyup', function() {
+                const searchTerm = settingSearch.value.toLowerCase();
+                const settingSections = document.querySelectorAll('.setting-section');
+
+                if (searchTerm === '') {
+                    // If search term is empty, show all sections and items
+                    settingSections.forEach(section => {
+                        section.style.display = 'block';
+                        section.querySelectorAll('.setting-item').forEach(item => {
+                            item.style.display = 'flex';
+                        });
+                    });
+                    return; // Exit the function
+                }
+
+                settingSections.forEach(section => {
+                    let sectionHasVisibleItems = false;
+                    const settingItems = section.querySelectorAll('.setting-item');
+                    const sectionTitle = section.querySelector('h2').textContent.toLowerCase();
+
+                    settingItems.forEach(item => {
+                        const label = item.querySelector('label').textContent.toLowerCase();
+                        if (sectionTitle.includes(searchTerm) || label.includes(searchTerm)) {
+                            item.style.display = 'flex';
+                            sectionHasVisibleItems = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+
+                    if (sectionHasVisibleItems) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Function to save and download the settings
+        function saveSettings() {
+            let settingsOutput = '';
+
+            // Helper to get value from form elements
+            function getValue(id, type = 'string', isFloat = false) {
+                const element = document.getElementById(id);
+                if (!element) return '';
+
+                let value;
+                if (element.type === 'checkbox') {
+                    // For checkboxes representing numeric values (0 or 1)
+                    value = element.checked ? '1' : '0';
+                } else if (element.tagName === 'SELECT') {
+                    value = element.value;
+                } else if (element.type === 'range' || element.type === 'number') {
+                    // For number and range inputs, format floats to 6 decimal places if specified, else parse as float
+                    value = parseFloat(element.value);
+                    if (isNaN(value)) { // Check for NaN
+                        return ''; // Do not write NaN values
+                    }
+                    value = isFloat ? value.toFixed(6) : value;
+                } else {
+                    value = element.value;
+                }
+
+                // Add quotes around string values unless it's a "width,height" resolution string
+                if (type === 'string' && typeof value === 'string' && !value.includes(',')) {
+                    return `"${value}"`;
+                }
+                return value;
+            }
+
+            // Helper to generate ray-traced and other flag-based settings (e.g., RT_AO(), Vrr())
+            function getFlagSetting(id, originalKey) {
+                const checkboxElement = document.getElementById(id);
+                if (checkboxElement && checkboxElement.checked) {
+                    return `${originalKey}()\n`;
+                }
+                return '';
+            }
+
+            // Constructing the output file content based on current form values
+            settingsOutput += `!WindowMode(i)                 // 0=windowed, 1=borderless, 2=fullscreen\n`;
+            settingsOutput += `!WindowOffset(i,i)             // window position in pixels \n`;
+            settingsOutput += `!Monitor(i)                    // index of primary monitor\n`;
+            settingsOutput += `!MonitorSecondary(i)           // index of secondary monitor\n`;
+            settingsOutput += `!RendererMode(s)               // d3d11, d3d12 \n`;
+            settingsOutput += `!FSR(f)                        // FSR sharpness\n`;
+            settingsOutput += `!ExtraGameFov(f)               // extra fov\n`;
+            settingsOutput += `!DisableDWM(i)                 // disables DWM when fullscreen\n`;
+            settingsOutput += `!RT_AO()                       // raytraced ambient occlusion\n`;
+            settingsOutput += `!RT_SS()                       // raytraced soft shadows\n`;
+            settingsOutput += `!RT_Lit()                      // raytraced flashlight\n`;
+            settingsOutput += `!RT_GiDif()                    // raytraced global illumination (diffuse)\n`;
+            settingsOutput += `!RT_GiSpc()                    // raytraced global illumination (specular)\n`;
+            settingsOutput += `!AsyncCompute(i)               // 0=deny async computes, 1=allow async computes if supported, \n`;
+            settingsOutput += `!Resolution(i,i)               // UI/window resolution of primary monitor\n`;
+            settingsOutput += `!ResolutionSecondary(i,i)      // UI/window resolution of secondary monitor\n`;
+            settingsOutput += `!Scale3D(f)                    // UI resolution * Scale3D = 3D resolution\n`;
+            settingsOutput += `!Upscaler(i)                   // 0=none, 1=linear; 2=DLSS; 3=FSR, 4=FSR2, 5=XeSS\n`;
+            settingsOutput += `!Upscaling(i)                  // 0=best performance, 1=balanced, 2=bestquality\n`;
+            settingsOutput += `!TextureQuality(s)             // Low, Medium, High\n`;
+            settingsOutput += `!GammaFloat(f)\n`;
+            settingsOutput += `!ShadowsPreset(i)\n`;
+            settingsOutput += `!ShadowsQuality(i)             // 0=PCF, 1=PCSS low, 2=PCSS medium, 3=PCSS high, 4=raytraced\n`;
+            settingsOutput += `!ShadowMapSize(i)\n`;
+            settingsOutput += `!SpotShadowMapSize(i)\n`;
+            settingsOutput += `!FrameRate(i)                  // 0=no VSync, 1=Max device refresh rate, 30 - 30Hz, 60 - 60Hz\n`;
+            settingsOutput += `!Vrr()                         // Variable Refresh Rate\n`;
+            settingsOutput += `!Reflex(i)                     // 0=off, 1=on, 2=on + boost\n`;
+            settingsOutput += `!GrassQuality(i)               // lower is better\n`;
+            settingsOutput += `!MotionBlur(i)                 // 0=disabled, 1=enabled\n`;
+            settingsOutput += `!MotionBlurQuality(s)          // Low, Medium, High\n`;
+            settingsOutput += `!MotionBlurIntensity(f)        // 0=min 1=max\n`;
+            settingsOutput += `!Bokeh(i)                      // 0=off, 1=on\n`;
+            settingsOutput += `!GlowGlare(i)                  // 0=off 1=on\n`;
+            settingsOutput += `!GlowStreaks(i)                // 0=off 1=on\n`;
+            settingsOutput += `!LensFlare(i)                  // 0=off 1=on\n`;
+            settingsOutput += `!SSSSQuality(i)                // 0=low, 1=medium, 2=high\n`;
+            settingsOutput += `!ChromaticAberration(i)        // 0=disabled, 1=enabled\n`;
+            settingsOutput += `!FilmGrain(i)                  // 0=disabled, 1=enabled\n`;
+            settingsOutput += `!ColorGrading(i)               // 0=normal, 1=e3\n`;
+            settingsOutput += `!AntiAliasing(i)               // 0=disabled, 1=enabled\n`;
+            settingsOutput += `!AntiAliasingMode(i)           // 0=sharp, 1=stable\n`;
+            settingsOutput += `!FogQuality(i)                 // 0=low, 1=medium, 2=high\n`;
+            settingsOutput += `!ReflectionsQuality(i)         // 0=low, 1=medium, 2=high\n`;
+            settingsOutput += `!ContactShadowsQuality(i)      // 0=none, 1=low, 2=medium, 3=high, 4=very high\n`;
+            settingsOutput += `!SpotShadowsQuality(i)         // 0=low, 1=medium, 2=high\n`;
+            settingsOutput += `!AmbientOcclusion(i)           // 0=disabled, 1=enabled\n`;
+            settingsOutput += `!AmbientOcclusionQuality(i)    // 0=low, 1=medium, 2=high\n`;
+            settingsOutput += `!ColorBlindMode(i)             // 0=none, 1=protanopia, 2=deuteranopia, 3=tritanopia\n`;
+            settingsOutput += `!GpuFxQuality(i)               // 0=medium, 1=high\n`;
+            settingsOutput += `!VoxelGiQuality(i)             // 0=off, 1=low, 2=medium, 3=high, 4=ultra\n`;
+            settingsOutput += `!OptSpotsCastShadows(i)\n`;
+            settingsOutput += `!LodQuality(i)                 // 0=low, 1=high\n`;
+            settingsOutput += `!LodMultiplier(i)              // 100 = default, 50 = half, 200 = twice, 400 = 4xdefault etc.\n`;
+            settingsOutput += `!AnisoOptOut()                 // Disable optional anisotropic filtering in some materials\n`;
+            settingsOutput += `!AnisoOptMaxAnisotropy(i)      // Set maximum anisotropy ration for optional anisotropic samplers. Values: 1, 2, 4, 8, 16\n`;
+            settingsOutput += `!FrameAmplification(i)         // 0=off, 1=DLSS\n`;
+            settingsOutput += `!Version(i)\n\n`;
+            
+            // Display Settings
+            settingsOutput += `RendererMode(${getValue('rendererMode')})\n`;
+            settingsOutput += `AsyncCompute(${getValue('asyncCompute', 'number')})\n`;
+            settingsOutput += `WindowMode(${getValue('windowMode', 'number')})\n`;
+            settingsOutput += `WindowOffset(${getValue('windowOffsetX', 'number')},${getValue('windowOffsetY', 'number')})\n`;
+            
+            // Handle Resolution (Primary Monitor) - dropdown or custom input
+            const resolutionSelect = document.getElementById('resolution');
+            const customResolutionInput = document.getElementById('customResolution');
+            let primaryResolutionValue;
+            if (resolutionSelect.value === 'custom') {
+                primaryResolutionValue = customResolutionInput.value;
+            } else {
+                primaryResolutionValue = resolutionSelect.value;
+            }
+            settingsOutput += `Resolution(${primaryResolutionValue})\n`;
+
+            settingsOutput += `ResolutionSecondary(${document.getElementById('resolutionSecondary').value})\n`;
+            settingsOutput += `Scale3D(${parseFloat(document.getElementById('scale3D').value).toFixed(6)})\n`;
+            settingsOutput += `FSR(${parseFloat(document.getElementById('fsrSharpness').value).toFixed(6)})\n`;
+            settingsOutput += `Upscaler(${getValue('upscaler', 'number')})\n`;
+            settingsOutput += `Upscaling(${getValue('upscaling', 'number')})\n`;
+            settingsOutput += `Monitor(${getValue('monitor', 'number')})\n`;
+            settingsOutput += `MonitorSecondary(${getValue('monitorSecondary', 'number')})\n`;
+            settingsOutput += `ExtraGameFov(${parseFloat(document.getElementById('extraGameFov').value).toFixed(2)})\n`;
+            settingsOutput += `DisableDWM(${getValue('disableDWM', 'number')})\n`;
+            
+            // Ray Tracing Settings (Flags)
+            settingsOutput += getFlagSetting('rt_ao', 'RT_AO');
+            settingsOutput += getFlagSetting('rt_ss', 'RT_SS');
+            settingsOutput += getFlagSetting('rt_lit', 'RT_Lit');
+            settingsOutput += getFlagSetting('rt_giDif', 'RT_GiDif');
+            settingsOutput += getFlagSetting('rt_giSpc', 'RT_GiSpc');
+
+            // Quality Settings
+            settingsOutput += `TextureQuality(${getValue('textureQuality')})\n`;
+            settingsOutput += `ShadowsPreset(${getValue('shadowsPreset', 'number')})\n`;
+            settingsOutput += `ShadowsQuality(${getValue('shadowsQuality', 'number')})\n`;
+            settingsOutput += `ShadowMapSize(${getValue('shadowMapSize', 'number')})\n`;
+            settingsOutput += `SpotShadowMapSize(${getValue('spotShadowMapSize', 'number')})\n`;
+            settingsOutput += `GammaFloat(${parseFloat(document.getElementById('gammaFloat').value).toFixed(2)})\n`;
+            settingsOutput += `GrassQuality(${getValue('grassQuality', 'number')})\n`;
+            
+            // Handle FrameRate - dropdown or custom input
+            const frameRateSelect = document.getElementById('frameRate');
+            const customFrameRateInput = document.getElementById('customFrameRate');
+            let frameRateValue;
+            if (frameRateSelect.value === 'custom') {
+                frameRateValue = customFrameRateInput.value;
+            } else {
+                frameRateValue = frameRateSelect.value;
+            }
+            settingsOutput += `FrameRate(${frameRateValue})\n`;
+
+            settingsOutput += getFlagSetting('vrr', 'Vrr');
+            settingsOutput += `Reflex(${getValue('reflex', 'number')})\n`;
+            
+            // Motion Blur & Post-Processing
+            settingsOutput += `MotionBlur(${getValue('motionBlur', 'number')})\n`;
+            settingsOutput += `MotionBlurQuality(${getValue('motionBlurQuality')})\n`;
+            settingsOutput += `MotionBlurIntensity(${parseFloat(document.getElementById('motionBlurIntensity').value).toFixed(2)})\n`;
+            settingsOutput += `Bokeh(${getValue('bokeh', 'number')})\n`;
+            settingsOutput += `GlowGlare(${getValue('glowGlare', 'number')})\n`;
+            settingsOutput += `GlowStreaks(${getValue('glowStreaks', 'number')})\n`;
+            settingsOutput += `LensFlare(${getValue('lensFlare', 'number')})\n`;
+            settingsOutput += `SSSSQuality(${getValue('ssssQuality', 'number')})\n`;
+            settingsOutput += `ChromaticAberration(${getValue('chromaticAberration', 'number')})\n`;
+            settingsOutput += `FilmGrain(${getValue('filmGrain', 'number')})\n`;
+            settingsOutput += `ColorGrading(${getValue('colorGrading', 'number')})\n`;
+            settingsOutput += `AntiAliasing(${getValue('antiAliasing', 'number')})\n`;
+            settingsOutput += `AntiAliasingMode(${getValue('antiAliasingMode', 'number')})\n`;
+            settingsOutput += `FogQuality(${getValue('fogQuality', 'number')})\n`;
+            settingsOutput += `ReflectionsQuality(${getValue('reflectionsQuality', 'number')})\n`;
+            settingsOutput += `ContactShadowsQuality(${getValue('contactShadowsQuality', 'number')})\n`;
+            settingsOutput += `SpotShadowsQuality(${getValue('spotShadowsQuality', 'number')})\n`;
+            settingsOutput += `AmbientOcclusion(${getValue('ambientOcclusion', 'number')})\n`;
+            settingsOutput += `AmbientOcclusionQuality(${getValue('ambientOcclusionQuality', 'number')})\n`;
+            settingsOutput += `ColorBlindMode(${getValue('colorBlindMode', 'number')})\n`;
+            settingsOutput += `GpuFxQuality(${getValue('gpuFxQuality', 'number')})\n`;
+            settingsOutput += `VoxelGiQuality(${getValue('voxelGiQuality', 'number')})\n`;
+            settingsOutput += `OptSpotsCastShadows(${getValue('optSpotsCastShadows', 'number')})\n`;
+            
+            // LOD & Anisotropy
+            settingsOutput += `LodQuality(${getValue('lodQuality', 'number')})\n`;
+            settingsOutput += `LodMultiplier(${getValue('lodMultiplier', 'number')})\n`;
+            if (document.getElementById('anisoOptOut')) {
+               settingsOutput += getFlagSetting('anisoOptOut', 'AnisoOptOut');
+            }
+            settingsOutput += `AnisoOptMaxAnisotropy(${getValue('anisoOptMaxAnisotropy', 'number')})\n`;
+            settingsOutput += `FrameAmplification(${getValue('frameAmplification', 'number')})\n`;
+            settingsOutput += `Version(2000)\n`;
+
+            console.log("Generated video.scr content:\n" + settingsOutput);
+            alert("Settings file will be downloaded. You must manually move it to:\nC:\\Users\\**\\Documents\\dying light 2\\out\\settings\\video.scr");
+
+            const blob = new Blob([settingsOutput], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'video.scr';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+    
+    </body>
+</html>
